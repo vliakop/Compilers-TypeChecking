@@ -57,16 +57,21 @@ public class Class{
 	}
 	
 	public boolean addDataMember(Variable dataMember){
+		for (Variable v : dataMembers_){
+			if (v.getName().equals(dataMember.getName()) == true){
+				return false;
+			}
+		}
 		return dataMembers_.add(dataMember);
 	}
 	
 	public boolean addMethod(Method method){
-		if (methods_.contains(method) == true) {
-			return false;
-		} else {
-			methods_.add(method);
-			return true;
+		for (Method m : methods_){
+			if (m.getName().equals(method.getName()) == true){
+				return false;
+			}
 		}
+		return methods_.add(method);
 	} 	
 	
 	public String toString(){
