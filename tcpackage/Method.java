@@ -56,12 +56,12 @@ public class Method{
 	}
 	
 	public boolean addParameter(Variable parameter){
-		if (parameters_.contains(parameter) == false) {
-			parameters_.add(parameter);
-			return true;
-		} else {
-			return false;
+		for (Variable p : parameters_) {
+			if (p.getName().equals(parameter.getName()) == true){
+				return false;
+			}
 		}
+		return parameters_.add(parameter);
 	}
 	
 	public boolean addLocalVariable(Variable localVariable){
