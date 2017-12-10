@@ -60,6 +60,30 @@ public class BuildVisitor extends DepthFirstVisitor{
 		n.f15.accept(this);	
 		n.f16.accept(this);	
 		n.f17.accept(this);	
+		visitingClass_ = null;
+		visitingMethod_ = null;
+	}
+	
+	@Override
+	public void visit(ClassDeclaration n){
+		if (eitherAssigned() == true){
+			System.out.println("BuildError");
+			return;	
+		}
+		visitingClass_ = n.f1.f0.toString();
+		boolean flag = symbolTable_.put(visitingClass_, null);
+		if (flag == false) {
+			System.out.println("BuildError");
+			return;	
+		}
+		n.f0.accept(this);	
+		n.f1.accept(this);	
+		n.f2.accept(this);	
+		n.f3.accept(this);	
+		n.f4.accept(this);	
+		n.f5.accept(this);	
+		visitingClass_ = null;
+		visitingMethod_ = null;	
 	}	
 
 	public boolean eitherAssigned(){
