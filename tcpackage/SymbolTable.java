@@ -10,6 +10,10 @@ public class SymbolTable{
 		table_ = new HashMap<String, Class>();
 	}
 	
+	public Class getClass(String className){
+		return table_.get(className);
+	}
+		
 	public boolean containsKey(String className){
 		return table_.containsKey(className);
 	}
