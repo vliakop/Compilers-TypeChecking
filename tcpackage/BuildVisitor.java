@@ -110,7 +110,58 @@ public class BuildVisitor extends DepthFirstVisitor{
 		visitingClass_ = null;
 		visitingMethod_ = null;	
 	}
+	
+	@Override
+	public void visit(VarDeclaration n){
+		if (classIsNull() == true){
+			System.out.println("BuildError");
+			return;
+		}
+		Class cls = symbolTable_.getClass(visitingClass_);
+		if (cls == null){
+			System.out.println("BuildError");
+			return;
+		}
+		String varName = n.f1.f0.toString();
+		String varType = n.f0.f0.toString();
+		boolean flag;
+		if (methodIsNull() == true){
+			flag = cls.addDataMember(new Variable(varName, varType));
+			if (flag == false) {
+				System.out.println("BuildError");
+				return;
+			}
+		} else {
+			Method m = cls.getMethod(visitingMethod_);
+			if (m == null){
+				System.out.println("BuildError");
+				return;
+			}
+			flag = m.addLocalVariable(new Variable(varName, varType));
+			if (flag == false) {
+				System.out.println("BuildError");
+				return;
+			}
+		}
+		n.f0.accept(this);	
+		n.f1.accept(this);	
+		n.f2.accept(this);	
+	}	
 
+	public boolean classIsNull(){
+		if (visitingClass_ == null) {
+			return true;
+		}
+		return false;	
+	}
+	
+	public boolean methodIsNull(){
+		if (visitingMethod_ == null){
+			return true;
+		}
+		return false;
+	}
+	
 	public boolean eitherAssigned(){
 		if (visitingClass_ != null || visitingMethod_ != null){
 			return true;

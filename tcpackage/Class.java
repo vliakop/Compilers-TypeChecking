@@ -39,6 +39,15 @@ public class Class{
 		return name_;
 	}
 	
+	public Method getMethod(String methodName){
+		for (Method m : methods_){
+			if (m.getName().equals(methodName) == true){
+				return m;
+			}
+		}
+		return null;
+	}
+	
 	public void setSuperName(String superName){
 		superName_ = superName;
 	}
