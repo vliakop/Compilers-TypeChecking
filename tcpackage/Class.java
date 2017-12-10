@@ -52,7 +52,12 @@ public class Class{
 	}
 	
 	public boolean addMethod(Method method){
-		return methods_.add(method);
+		if (methods_.contains(method) == true) {
+			return false;
+		} else {
+			methods_.add(method);
+			return true;
+		}
 	} 	
 	
 	public String toString(){

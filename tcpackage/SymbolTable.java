@@ -14,7 +14,13 @@ public class SymbolTable{
 		return table_.containsKey(className);
 	}
 	
-	public Object put(String className, Class value){
-		return table_.put(className, value);	
+	/* Returns the last className if sth already existed, else null */	
+	public boolean put(String className, Class value){
+		Object obj = table_.put(className, value);
+		if (obj == null) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 }
