@@ -50,19 +50,29 @@ public class SymbolTable{
 			if (cls.isSubclass() == true){	// if it's a subclass
 				String superName = cls.getSuperName();
 				Class pcls = this.getClass(superName); //  Get the first parent class
-				if (pcls == null){
+				if (pcls == null || cls.getName().equals(superName) == true){
 					System.out.println("FirstParent TypeCheck Error");
 					return false;
 				}
 				while (pcls != null) {
-					allDifferentVars(cls.getDataMembers(), pcls.getDataMembers());
-					noOverloading(cls.getMethods(), pcls.getMethods());
+					boolean all = allDifferentVars(cls.getDataMembers(), pcls.getDataMembers());
+					if (all == false) {
+						System.out.print("Redeclaring already-existent datamembers in class " + cls.getName() + " from baseclass " + pcls.getName());
+						System.exit(1);
+					}
+					boolean overload = noOverloading(cls.getMethods(), pcls.getMethods());
+					if (overload == false) {
+						System.out.println("In class " + cls.getName() + " cannot overload methods previously declared in class " + pcls.getName());
+						System.exit(1);
+					}
 					if(pcls.isSubclass() == true) {
 						pcls = this.getClass(pcls.getSuperName());
 						if(pcls == null) {
 							System.out.println("SubsequentParent TypeCheck Error");
 							return false;
 						}
+					} else {
+						break;
 					}
 				}
 			}
@@ -85,10 +95,10 @@ public class SymbolTable{
 		for (Method m : childMethods) {
 			for (Method pm : parentMethods) {
 				if (m.getName().equals(pm.getName()) == true) { //  Same name methods : check return type and parameter list
-					if (m.getReturnType().equals(pm.getReturnType()) == true) {	//  Ensure => Same Return Type
+					if (m.getReturnType().equals(pm.getReturnType()) == false) {	//  Ensure => Same Return Type
 						return false;
 					}
-					if(m.parametersToString().equals(pm.parametersToString()) == true) { //  Ensure => Same Argument List
+					if(m.parametersToString().equals(pm.parametersToString()) == false) { //  Ensure => Same Argument List
 						return false;
 					}
 				}

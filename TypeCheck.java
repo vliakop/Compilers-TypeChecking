@@ -11,11 +11,12 @@ public class TypeCheck{
 		String s2 = "someMethod";
 		System.out.println(s1.equals(s2));
 		try{
-			MiniJavaParser parser = new MiniJavaParser(new FileInputStream("SomeTest.java"));
+			MiniJavaParser parser = new MiniJavaParser(new FileInputStream("oldSomeTest.java"));
 			Node root = parser.Goal();
 			BuildVisitor bv = new BuildVisitor();
 			root.accept(bv);
 			bv.print();
+			bv.symbolTable_.subclassChecks();
 		} catch (ParseException pe){
 			System.out.println(pe);
 		} catch (FileNotFoundException fe){

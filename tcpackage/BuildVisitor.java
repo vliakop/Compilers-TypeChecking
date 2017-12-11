@@ -9,7 +9,7 @@ public class BuildVisitor extends DepthFirstVisitor{
 	
 	private String visitingClass_;
 	private String visitingMethod_;	
-	private SymbolTable symbolTable_;
+	public SymbolTable symbolTable_;
 
 	public BuildVisitor(){
 		

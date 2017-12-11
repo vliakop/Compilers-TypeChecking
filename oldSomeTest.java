@@ -8,7 +8,6 @@ class SomeTest{
 class Test {
 	A i;
 	int j;
-	B i;
 	
 	public int someMethod(int k){
 		int m;
@@ -16,12 +15,24 @@ class Test {
 		return m;
 	}
 	
-	public int someMethod(int k){
-		int i;
+	public int someethod(int k){
 		int i;
 		return l;
 	}
+}
 
+class Test2 extends Test {
+	
+	boolean ij;
+
+}
+
+
+class Test3 extends Test2 {
+	boolean bi;
+	public Test someethod(){	
+		return new Test();
+	}	
 }
 
 
