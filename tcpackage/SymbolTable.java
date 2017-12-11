@@ -35,4 +35,10 @@ public class SymbolTable{
 			return false;
 		}
 	}
+	
+	public void print(){
+		for (Map.Entry<String, Class> e : table_.entrySet()){
+			e.getValue().print();
+		}
+	}
 }
