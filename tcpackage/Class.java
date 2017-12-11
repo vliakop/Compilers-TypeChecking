@@ -39,6 +39,14 @@ public class Class{
 		return name_;
 	}
 	
+	public List<Variable> getDataMembers(){
+		return dataMembers_;
+	}
+
+	public List<Method> getMethods(){
+		return methods_;
+	}
+
 	public Method getMethod(String methodName){
 		for (Method m : methods_){
 			if (m.getName().equals(methodName) == true){
@@ -90,6 +98,14 @@ public class Class{
 		return dms;
 	}
 	
+	public boolean isSubclass(){
+		if(superName_ == null) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+
 	public void print(){
 		System.out.println(this.toString());
 	}	

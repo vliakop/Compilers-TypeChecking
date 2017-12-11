@@ -98,4 +98,16 @@ public class Method{
 		String retVal = returnType_ + " " + name_ + params + lvars;
 		return retVal;	
 	}	
+ 
+	/* Returns a string of the paramet ers
+	 * eg: (int i, int j, A k) 
+	 */
+	public String parametersToString() {
+		String params = "( ";
+		for (Variable v : parameters_) {
+			params = params +  v.toString() + ", ";
+		}
+		params = params + ")";
+		return params;
+	}
 }
