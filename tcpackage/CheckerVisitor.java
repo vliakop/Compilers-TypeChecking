@@ -11,11 +11,13 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
 	private SymbolTable symbolTable_;
 	private String visitingClass_;
 	private String visitingMethod_;
+	boolean needID_;
 
 	public CheckerVisitor(SymbolTable symbolTable) {
 		symbolTable_ = symbolTable;
 		visitingClass_ = null;
 		visitingMethod_ = null;
+		needID_ = false;
 		if (symbolTable_.subclassChecks() == false) {
 			System.out.println("subclassChecks failed");
 			System.exit(2);
@@ -402,6 +404,10 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
 	@Override
 	public String visit(WhileStatement n, String argu) {
 		String varExpressionType = n.f2.accept(this, null);
+		if (varExpressionType == null) {
+			System.out.println("WhileStatement CheckError");
+			System.exit(2);
+		}
 		if (varExpressionType.equals("boolean") == false) {
 			System.out.println("Whilestatements need boolean expressions");
 			System.exit(2);
@@ -579,12 +585,44 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
 
 	@Override
 	public String visit(MessageSend n, String argu) {
-		String lol = n.f4.accept(this, null);
-		if (lol != null) {
-			System.out.println("THE GLORIOUS EXPRESSION LIST IS " + lol);
-			System.exit(69);
+		if (eitherNull() == true) {
+			System.out.println("MS CheckError");
+			System.exit(2);
 		}
-		return null;
+		String className = n.f0.accept(this, null);
+		if (symbolTable_.primitive(className) == true) {
+			System.out.println("Expected User-Defined Class. Primitive '" + className + "' given instead");
+			System.exit(2);
+		}
+		Class cls = symbolTable_.getClass(className);
+		if (cls == null) {
+			System.out.println("Class '" + className + "' does not exist. Cannot call objects of that type");
+			System.exit(2);
+		}
+		needID_ = true;
+		String methodName = n.f2.accept(this, null);
+		needID_ = false;
+		Method m = symbolTable_.getMethodFromClass(methodName, className);
+		if (m == null) {
+			System.out.println("Method '" + methodName + "' of class '" + className + "' wasn't defined.");
+			System.exit(2);
+		}
+		String params = m.parameterTypesToString();
+		if (params == null) {
+			System.out.println("Unknown MS CheckError #1");
+			System.exit(2);
+		}
+		String paramsGiven = n.f4.accept(this, null);
+		if (paramsGiven == null) {
+			paramsGiven = "( )";
+		}
+		if(params.equals(paramsGiven) == true) {
+
+			return m.getReturnType();
+		} else {
+			return null;
+		}
+
 	}
 
     /**
@@ -678,6 +716,9 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
 
 	@Override
 	public String visit(Identifier n, String argu) {
+		if (needID_ == true) {
+			return n.f0.toString();
+		}
 		if (visitingClass_ != null && visitingMethod_ != null) {	// Check the current method of the class that is being examined
 			String varName = n.f0.toString();
 			Class cls = symbolTable_.getClass(visitingClass_);

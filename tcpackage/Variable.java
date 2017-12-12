@@ -14,6 +14,7 @@ public class Variable{
 	public Variable(String name, String type){
 		name_ = name;
 		type_ = type;
+		offset_ = -1;
 	}
 	
 	public String getName(){
@@ -45,6 +46,6 @@ public class Variable{
 	}
 	
 	public String toString(){
-		return type_ + " " + name_ +  ":" + offset_; 
+		return type_ + " " + name_ + ":" + offset_; 
 	}
 }

@@ -38,6 +38,7 @@ public class Method{
 		name_ = name;
 		parameters_ = new ArrayList<Variable>();
 		localVariables_ = new ArrayList<Variable>();	
+		offset_ = -1;
 	}
 	
 	public int getOffset() {

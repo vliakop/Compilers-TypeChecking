@@ -7,9 +7,6 @@ import tcpackage.*;
 public class TypeCheck{
 	
 	public static void main(String[] args){	
-		String s1 = "someMethod";
-		String s2 = "someMethod";
-		System.out.println(s1.equals(s2));
 		try{
 			MiniJavaParser parser = new MiniJavaParser(new FileInputStream("oldSomeTest.java"));
 			Node root = parser.Goal();

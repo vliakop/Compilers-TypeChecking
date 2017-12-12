@@ -362,24 +362,21 @@ public class BuildVisitor extends DepthFirstVisitor{
 		Class pcls = symbolTable_.getClass(baseClass);
 		while (pcls != null) {
 			List<Variable> varList = pcls.getDataMembers();
-			if (varList != null) {
-				for (Variable v : varList) {
-					if (v.getName().equals(varName) == true) {
-						if (v.getType().equals(varType) == true) {
-							return v.getOffset();
-						}
+			for (Variable v : varList) {
+				if (v.getName().equals(varName) == true) {
+					if (v.getType().equals(varType) == true) {
+						return v.getOffset();
 					}
 				}
-			} else {	//  If the data member list of an ancestor was empty, try the next one, if it exists
-				if (pcls.isSubclass() == true) {
-					pcls = symbolTable_.getClass(pcls.getSuperName());
-					if (pcls == null) {
-						System.out.println("Superclass has not been declared before it's subclass");
-						System.exit(1);
-					}
-				} else {
-					return globalOffset_;
+			} //  Ran dry of the data member list of an ancestor was empty, try the next one, if it exists
+			if (pcls.isSubclass() == true) {
+				pcls = symbolTable_.getClass(pcls.getSuperName());
+				if (pcls == null) {
+					System.out.println("Superclass has not been declared before it's subclass");
+					System.exit(1);
 				}
+			} else {
+				return globalOffset_;
 			}
 		}
 		return globalOffset_;
@@ -392,22 +389,19 @@ public class BuildVisitor extends DepthFirstVisitor{
 		Class pcls = symbolTable_.getClass(baseClass);
 		while (pcls != null) {
 			List<Method> mList = pcls.getMethods();
-			if (mList != null) {
-				for (Method m : mList) {
-					if (m.getName().equals(methodName) == true) {
-						return m.getOffset();
-					}
+			for (Method m : mList) {
+				if (m.getName().equals(methodName) == true) {
+					return m.getOffset();
 				}
-			} else {	//  If the data member list of an ancestor was empty, try the next one, if it exists
-				if (pcls.isSubclass() == true) {
-					pcls = symbolTable_.getClass(pcls.getSuperName());
-					if (pcls == null) {
-						System.out.println("Superclass has not been declared before it's subclass");
-						System.exit(1);
-					}
-				} else {
-					return methodOffset_;
+			}	//  ran dry of the data member list of an ancestor was empty, try the next one, if it exists
+			if (pcls.isSubclass() == true) {
+				pcls = symbolTable_.getClass(pcls.getSuperName());
+				if (pcls == null) {
+					System.out.println("Superclass has not been declared before it's subclass");
+					System.exit(1);
 				}
+			} else {
+				return methodOffset_;
 			}
 		}
 		return methodOffset_;

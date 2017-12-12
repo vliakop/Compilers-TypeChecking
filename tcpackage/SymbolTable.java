@@ -52,7 +52,7 @@ public class SymbolTable{
 				Class pcls = this.getClass(superName); //  Get the first parent class
 				if (pcls == null || cls.getName().equals(superName) == true){
 					System.out.println("FirstParent TypeCheck Error");
-					return false;
+					System.exit(1);
 				}
 				while (pcls != null) {
 					boolean all = allDifferentVars(cls.getDataMembers(), pcls.getDataMembers());
@@ -144,6 +144,29 @@ public class SymbolTable{
 			return true;
 		}
 		return false;
+	}
+
+	public Method getMethodFromClass(String methodName, String className) {
+
+		Class cls = this.getClass(className);
+		if (cls == null) {
+			return null;
+		}
+
+		Method m = cls.getMethod(methodName);
+		if (m != null) {
+			return m;
+		} else {
+			Class pcls = this.getClass(cls.getSuperName());
+			while (pcls != null) {
+				m = pcls.getMethod(methodName);
+				if(m != null) {
+					return m;
+				}
+				pcls = this.getClass(pcls.getSuperName());
+			}
+			return null;
+		}
 	}
 
 }	/* END OF CLASS */

@@ -75,7 +75,7 @@ public class Class{
 		}
 		return null;
 	}
-	
+
 	public void setSuperName(String superName){
 		superName_ = superName;
 	}
