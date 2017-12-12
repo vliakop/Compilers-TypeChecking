@@ -138,6 +138,49 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
 		return n.f0.accept(this, null);
 	}
 
+
+	@Override
+	public String visit(ArrayType n, String argu) {
+		return "int []";
+	}
+
+	@Override
+	public String visit(BooleanType n, String argu) {
+		return "boolean";
+	}
+
+	@Override
+	public String visit(IntegerType n, String argu) {
+		return "int";
+	}
+
+	@Override
+	public String visit(Statement n, String argu) {
+		return n.f0.accept(this, null);
+	}
+
+	@Override
+	public String visit(Block n, String argu) {
+		return n.f1.accept(this, null);
+	}
+
+	@Override
+	public String visit(AssignmentStatement n, String argu) {
+		String varType = n.f0.f0.toString();
+		String expType = n.f2.;
+		// Things to do are pending
+	}
+
+
+	@Override
+	public String visit(ArrayAssignmentStatement n, String Argu) {
+		String varType = n.f0.f0.toString();
+		if (varType.equals("int []") == false) {
+			System.out.println("AA CheckError");
+			System.exit(2);
+		}
+	}
+
 	public boolean eitherAssigned(){
 		if (visitingClass_ != null || visitingMethod_ != null){
 			return true;
