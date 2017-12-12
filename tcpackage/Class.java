@@ -16,12 +16,22 @@ public class Class{
 	private String name_;
 	private List<Variable> dataMembers_;
 	private List<Method> methods_;
-	
+	private int offset_;
+
+	public Class(String superName, String name, int offset){
+		superName_ = superName;
+		name_ = name;
+		dataMembers_ = new ArrayList<Variable>();
+		methods_ = new ArrayList<Method>();
+		offset_ = 0;
+	}
+
 	public Class(String superName, String name){
 		superName_ = superName;
 		name_ = name;
 		dataMembers_ = new ArrayList<Variable>();
 		methods_ = new ArrayList<Method>();
+		offset_ = 0;
 	}
 	
 	public Class(String name){
@@ -29,6 +39,7 @@ public class Class{
 		name_ = name;
 		dataMembers_ = new ArrayList<Variable>();
 		methods_ = new ArrayList<Method>();
+		offset_ = 0;
 	}
 	
 	public String getSuperName(){

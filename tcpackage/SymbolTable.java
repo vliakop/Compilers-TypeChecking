@@ -115,7 +115,7 @@ public class SymbolTable{
 			return true;
 		} else if (type1.equals("boolean") && type2.equals("boolean")) {
 			return true;
-		} else {
+		} else if (primitive(type1) == false && primitive(type2) == false){
 			if (type1.equals(type2) == true) {
 				return true;
 			} else {
@@ -130,7 +130,20 @@ public class SymbolTable{
 				}
 				return false;
 			}
+		} else {
+			return false;
 		}
+	}
+
+	public boolean primitive(String type) {
+		if (type.equals("int") == true) {
+			return true;
+		} else if (type.equals("boolean") == true) {
+			return true;
+		} else if (type.equals("int []") == true){
+			return true;
+		}
+		return false;
 	}
 
 }	/* END OF CLASS */

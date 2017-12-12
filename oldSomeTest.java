@@ -1,38 +1,27 @@
 class SomeTest{
+
 	public static void main(String[] args){
-		int i;
-		i = 1;
+		int idas;
+		System.out.println(idas);
 	}
-}	
-
+}
+	
 class Test {
-	A i;
 	int j;
-	
-	public int someMethod(int k){
-		int m;
-		m  = 69;
-		return m;
+	public int meth(int n, int m){
+		boolean flag;
+		int[] g;
+		return 13;
 	}
 	
-	public int someethod(int k){
-		int i;
-		return l;
+	public boolean tromero(){
+		if ((1 < 5) && (8<4) ) {
+			System.out.println(13);
+		} else {
+			System.out.println(15);
+		}
+		return true;
 	}
-}
-
-class Test2 extends Test {
-	
-	boolean ij;
-
-}
-
-
-class Test3 extends Test2 {
-	boolean bi;
-	public Test someethod(){	
-		return new Test();
-	}	
 }
 
 

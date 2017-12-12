@@ -18,7 +18,7 @@ public class TypeCheck{
 			bv.print();
 			bv.symbolTable_.subclassChecks();
 			CheckerVisitor typeChecker = new CheckerVisitor(bv.symbolTable_);
-			root.accept(typeChecker);
+			root.accept(typeChecker, null);
 		} catch (ParseException pe){
 			System.out.println(pe);
 		} catch (FileNotFoundException fe){

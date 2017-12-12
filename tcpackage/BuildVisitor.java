@@ -10,12 +10,19 @@ public class BuildVisitor extends DepthFirstVisitor{
 	private String visitingClass_;
 	private String visitingMethod_;	
 	public SymbolTable symbolTable_;
+	private int globalOffset_;
+	private int methodOffset_;
+	private boolean extention_; //  if a class extends some other
 
 	public BuildVisitor(){
 		
 		visitingClass_ = null;
 		visitingMethod_ = null;
 		symbolTable_ = new SymbolTable();	
+		globalOffset_ = 0; // for Data Members
+		methodOffset_ = 0; // for methods
+		extention_ = false;
+
 	}
 	
 	
@@ -63,7 +70,15 @@ public class BuildVisitor extends DepthFirstVisitor{
 		visitingClass_ = null;
 		visitingMethod_ = null;
 	}
-	
+
+    /**
+    * f0 -> "class"
+    * f1 -> Identifier()
+    * f2 -> "{"
+    * f3 -> ( VarDeclaration() )*
+    * f4 -> ( MethodDeclaration() )*
+    * f5 -> "}"
+    */
 	@Override
 	public void visit(ClassDeclaration n){
 		if (eitherAssigned() == true){
@@ -76,6 +91,7 @@ public class BuildVisitor extends DepthFirstVisitor{
 			System.out.println("BuildError");
 			System.exit(1);	
 		}
+		extention_ = false;
 		n.f0.accept(this);	
 		n.f1.accept(this);	
 		n.f2.accept(this);	
@@ -94,11 +110,17 @@ public class BuildVisitor extends DepthFirstVisitor{
 		}
 		visitingClass_ = n.f1.f0.toString();
 		String baseClass = n.f3.f0.toString();
+		Class bcls = symbolTable_.getClass(baseClass);
+		if (bcls == null) {
+			System.out.println("Class " + visitingClass_ + " extends class " + baseClass + ", which has not been declared yet");
+			System.exit(1);
+		}
 		boolean flag = symbolTable_.put(baseClass, visitingClass_);
 		if (flag == false) {
 			System.out.println("BuildError");
 			System.exit(1);	
 		}
+		extention_ = true;
 		n.f0.accept(this);	
 		n.f1.accept(this);	
 		n.f2.accept(this);	
@@ -110,7 +132,13 @@ public class BuildVisitor extends DepthFirstVisitor{
 		visitingClass_ = null;
 		visitingMethod_ = null;	
 	}
-	
+
+    /**
+    * f0 -> Type()
+    * f1 -> Identifier()
+    * f2 -> ";"
+    */
+
 	@Override
 	public void visit(VarDeclaration n){
 		if (classIsNull() == true){
@@ -127,12 +155,24 @@ public class BuildVisitor extends DepthFirstVisitor{
 		String varType = this.determineVarType(n, which);
 		//String varType = n.f0.f0.toString();
 		boolean flag;
-		if (methodIsNull() == true){
-			flag = cls.addDataMember(new Variable(varName, varType));
+		int offset;
+		if (methodIsNull() == true){	//  It's a data member variable declaration
+			Variable var = new Variable(varName, varType);
+			flag = cls.addDataMember(var);	//  Adding a data member, need to set the offset
 			if (flag == false) {
 				System.out.println("BuildError");
 				System.exit(1);
 			}
+			if (extention_ == false) {	// if it is not a subclass just assign the current offset and update it
+				offset = globalOffset_;
+				this.updateOffset(varType);
+			} else {
+				offset = calculateVarOffset(varType, varName);	// else calculate the offset
+				if (offset == globalOffset_){	// if it is not different than the current (lower) - it's a new data member
+					this.updateOffset(varType);
+				}
+			}
+			var.setOffset(offset);
 		} else {
 			Method m = cls.getMethod(visitingMethod_);
 			if (m == null){
@@ -164,12 +204,24 @@ public class BuildVisitor extends DepthFirstVisitor{
 		int which = n.f1.f0.which;
 		String retType = determineRetVal(n, which);
 		String methodName = n.f2.f0.toString();
-		boolean flag = cls.addMethod(new Method(retType, methodName));
+		visitingMethod_ = methodName;
+		Method m = new Method(retType, methodName);
+		boolean flag = cls.addMethod(m);
 		if (flag == false) {
 			System.out.println("BuildError");
 			System.exit(1);
 		}
-		visitingMethod_ = methodName;
+		int offset;
+		if (extention_ == false) {
+			offset = methodOffset_;
+			this.updateMethodOffset();
+		} else {
+			offset = calculateMethodOffset(methodName);
+			if (offset == methodOffset_) {
+				this.updateMethodOffset();
+			}
+		}
+		m.setOffset(offset);
 		n.f0.accept(this);	
 		n.f1.accept(this);	
 		n.f2.accept(this);	
@@ -290,6 +342,75 @@ public class BuildVisitor extends DepthFirstVisitor{
 		}
 	}
 
+	public void updateOffset(String varType) {
+		if (varType.equals("boolean") == true) {
+			globalOffset_ = globalOffset_ + 1;
+		} else {
+			globalOffset_ = globalOffset_ + 4;
+		}
+	}
 
+	public void updateMethodOffset(){
+		methodOffset_ = methodOffset_ + 8;
+	}
+
+
+	public int calculateVarOffset(String varType, String varName) {
+
+		Class cls = symbolTable_.getClass(visitingClass_);
+		String baseClass = cls.getSuperName();
+		Class pcls = symbolTable_.getClass(baseClass);
+		while (pcls != null) {
+			List<Variable> varList = pcls.getDataMembers();
+			if (varList != null) {
+				for (Variable v : varList) {
+					if (v.getName().equals(varName) == true) {
+						if (v.getType().equals(varType) == true) {
+							return v.getOffset();
+						}
+					}
+				}
+			} else {	//  If the data member list of an ancestor was empty, try the next one, if it exists
+				if (pcls.isSubclass() == true) {
+					pcls = symbolTable_.getClass(pcls.getSuperName());
+					if (pcls == null) {
+						System.out.println("Superclass has not been declared before it's subclass");
+						System.exit(1);
+					}
+				} else {
+					return globalOffset_;
+				}
+			}
+		}
+		return globalOffset_;
+	}
+
+	public int calculateMethodOffset(String methodName) {
+
+		Class cls = symbolTable_.getClass(visitingClass_);
+		String baseClass = cls.getSuperName();
+		Class pcls = symbolTable_.getClass(baseClass);
+		while (pcls != null) {
+			List<Method> mList = pcls.getMethods();
+			if (mList != null) {
+				for (Method m : mList) {
+					if (m.getName().equals(methodName) == true) {
+						return m.getOffset();
+					}
+				}
+			} else {	//  If the data member list of an ancestor was empty, try the next one, if it exists
+				if (pcls.isSubclass() == true) {
+					pcls = symbolTable_.getClass(pcls.getSuperName());
+					if (pcls == null) {
+						System.out.println("Superclass has not been declared before it's subclass");
+						System.exit(1);
+					}
+				} else {
+					return methodOffset_;
+				}
+			}
+		}
+		return methodOffset_;
+	}
 }
 

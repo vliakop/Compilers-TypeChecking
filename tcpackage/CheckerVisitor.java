@@ -221,6 +221,9 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
 		}
 		int which = n.f0.f0.which;
 		String paramType = determineParamType(n, which);
+		if (paramType.equals("int") || paramType.equals("boolean") || paramType.equals("int []")){
+			return null;
+		}
 		if (symbolTable_.containsKey(paramType) == false) {
 			System.out.println("Unknown type " + paramType + " for parameter '" + n.f1.f0.toString() + "'");
 		}
@@ -418,8 +421,12 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
 	@Override
 	public String visit(PrintStatement n, String argu) {
 		String varExpressionType = n.f2.accept(this, null);
-		if (varExpressionType.equals("int") == false) {
+		if (varExpressionType == null){
 			System.out.println("PrintStatements need int expressions");
+			System.exit(2);
+		}
+		if (varExpressionType.equals("int") == false) {
+			System.out.println("PrintStatements need int expressions but I got " + varExpressionType);
 			System.exit(2);
 		}
 		return null;
@@ -689,7 +696,7 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
 			} else {
 				var = m.getLocalVariable(varName);
 				if (var != null) {
-					return var.getName();
+					return var.getType();
 				} else {
 					var = cls.getDataMember(varName);
 					if (var == null) {

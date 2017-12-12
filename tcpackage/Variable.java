@@ -45,6 +45,6 @@ public class Variable{
 	}
 	
 	public String toString(){
-		return type_ + " " + name_; 
+		return type_ + " " + name_ +  ":" + offset_; 
 	}
 }

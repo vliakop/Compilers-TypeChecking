@@ -23,7 +23,16 @@ public class Method{
 	private String name_;
 	private List<Variable> parameters_;
 	private List<Variable> localVariables_;
-	
+	private int offset_;
+		
+	public Method(String returnType, String name, int offset){
+		returnType_ = returnType;
+		name_ = name;
+		parameters_ = new ArrayList<Variable>();
+		localVariables_ = new ArrayList<Variable>();
+		offset_ = offset;	
+	}
+
 	public Method(String returnType, String name){
 		returnType_ = returnType;
 		name_ = name;
@@ -31,6 +40,10 @@ public class Method{
 		localVariables_ = new ArrayList<Variable>();	
 	}
 	
+	public int getOffset() {
+		return offset_;
+	}
+
 	public String getReturnType(){
 		return returnType_;
 	}
@@ -51,7 +64,7 @@ public class Method{
 		}
 		return null;
 	}
-		
+
 	public Variable getLocalVariable(String lvName) {
 		for (Variable v : localVariables_) {
 			if (v.getName().equals(lvName) == true) {
@@ -73,6 +86,10 @@ public class Method{
 		name_ = name;
 	}
 	
+	public void setOffset(int offset) {
+		offset_ = offset;
+	}
+
 	public boolean addParameter(Variable parameter){
 		for (Variable p : parameters_) {
 			if (p.getName().equals(parameter.getName()) == true){
@@ -113,7 +130,7 @@ public class Method{
 			lvars = lvars + "\n\t" + v.toString() + ";";
 		}
 		lvars = lvars + "\n}";
-		String retVal = returnType_ + " " + name_ + params + lvars;
+		String retVal = returnType_ + " " + name_ + params + lvars + ":" + offset_;
 		return retVal;	
 	}	
  
