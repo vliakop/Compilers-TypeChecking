@@ -43,6 +43,24 @@ public class Method{
 		return parameters_;
 	}
 	
+	public Variable getParameter(String paramName) {
+		for (Variable v : parameters_) {
+			if (v.getName().equals(paramName) == true) {
+				return v;
+			}
+		}
+		return null;
+	}
+		
+	public Variable getLocalVariable(String lvName) {
+		for (Variable v : localVariables_) {
+			if (v.getName().equals(lvName) == true) {
+				return v;
+			}
+		}
+		return null;
+	}
+
 	public List<Variable> getLocalVariables(){
 		return localVariables_;
 	}
@@ -106,6 +124,15 @@ public class Method{
 		String params = "( ";
 		for (Variable v : parameters_) {
 			params = params +  v.toString() + ", ";
+		}
+		params = params + ")";
+		return params;
+	}
+
+	public String parameterTypesToString() {
+		String params = "( ";
+		for (Variable v : parameters_) {
+			params = params + v.getType() + ", ";
 		}
 		params = params + ")";
 		return params;

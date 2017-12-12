@@ -17,6 +17,7 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
 		visitingClass_ = null;
 		visitingMethod_ = null;
 		if (symbolTable_.subclassChecks() == false) {
+			System.out.println("subclassChecks failed");
 			System.exit(2);
 		}
 	}	 
@@ -26,6 +27,17 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
 	 * If something went wrong, the program would have exited
 	 */
 
+    /**
+    * f0 -> MainClass()
+    * f1 -> ( TypeDeclaration() )*
+    * f2 -> <EOF>
+    */
+
+	public String visit(Goal n, String argu) {
+		n.f0.accept(this, null);
+		n.f1.accept(this, null);
+		return null;
+	}
 
    /**
    * f0 -> "class"
@@ -56,8 +68,8 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
 		}
 		visitingClass_ = n.f1.f0.toString();
 		visitingMethod_ =  n.f0.toString();	
-		n.f14.accept(this);	
-		n.f15.accept(this);	
+		n.f14.accept(this, null);	
+		n.f15.accept(this, null);	
 		visitingClass_ = null;
 		visitingMethod_ = null;
 		return null;
@@ -91,10 +103,11 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
 			System.exit(2);	
 		}
 		visitingClass_ = n.f1.f0.toString();		
-		n.f3.accept(this);	
-		n.f4.accept(this);	
+		n.f3.accept(this, null);	
+		n.f4.accept(this, null);	
 		visitingClass_ = null;
 		visitingMethod_ = null;	
+		return null;
 	}
 
    /**
@@ -115,10 +128,11 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
 			System.exit(2);
 		}
 		visitingClass_ = n.f1.f0.toString();	
-		n.f5.accept(this);	
-		n.f6.accept(this);	
+		n.f5.accept(this, null);	
+		n.f6.accept(this, null);	
 		visitingClass_ = null;
-		visitingMethod_ = null;	
+		visitingMethod_ = null;
+		return null;	
 	}
 
   /**
@@ -128,7 +142,7 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
    */
 
 	@Override
-	public void visit(VarDeclaration n, String argu){
+	public String visit(VarDeclaration n, String argu){
 		if (classIsNull() == true){
 			System.out.println("VD NullClass Error");
 			System.exit(2);
@@ -167,19 +181,24 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
 			System.out.println("MD sthsNull CheckError");
 			System.exit(2);
 		}
-		visitingMethod_ = methodName;	
-		n.f4.accept(this);		
-		n.f7.accept(this);	
-		n.f8.accept(this);	
-		// MISSING CONTROL - HANDLE STATEMENTS FIRST
-		n.f10.accept(this);		
+		visitingMethod_ = n.f2.f0.toString();	
+		String returnType = n.f1.accept(this, null);
+		n.f4.accept(this, null);		
+		n.f7.accept(this, null);	
+		n.f8.accept(this, null);	
+		String returnValue = n.f10.accept(this, null);
+		if (symbolTable_.compatible(returnType, returnValue) == false) {
+			System.out.println("Expected return type of " + returnType + ". Returned type is " + returnValue + " in method " + visitingClass_ +"::" + visitingMethod_);
+			System.exit(2);
+		}
 		visitingMethod_ = null;
+		return null;
 	}
 
 
    /**
    * f0 -> FormalParameter()
-   * f1 -> ( FormalParameterRest() )*
+   * f1 -> FormalParameterTail()
    */
 
 	@Override
@@ -203,17 +222,27 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
 		int which = n.f0.f0.which;
 		String paramType = determineParamType(n, which);
 		if (symbolTable_.containsKey(paramType) == false) {
-			System.out.println("Unknown type " + paramType + " for parameter '" + n.f1.f0.toString + "'");
+			System.out.println("Unknown type " + paramType + " for parameter '" + n.f1.f0.toString() + "'");
 		}
+		return null;
 	}
 
    /**
-   * f0 -> ","
-   * f1 -> FormalParameter()
+   * f0 -> (FormalParameterTerm)*
    */
 
 	@Override
-	public String visit(FormalParameterRest n, String argu) {
+	public String visit(FormalParameterTail n, String argu) {
+		n.f0.accept(this, null);
+		return null;
+	}
+
+    /**
+    * f0 -> ","
+    * f1 -> FormalParameter()
+    */
+	@Override
+	public String visit(FormalParameterTerm n, String argu) {
 		n.f1.accept(this, null);
 		return null;
 	}
@@ -295,8 +324,13 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
 
 	@Override
 	public String visit(AssignmentStatement n, String argu) {
-		String varType = n.f0.f0.toString();
-		String expType = n.f2.;
+		String varType = n.f0.accept(this, null);
+		String expType = n.f2.accept(this, null);
+		if (symbolTable_.compatible(varType, expType) == false) {
+			System.out.println("Expected expression of type " + varType + " instead of type " + expType + "in assignment");
+			System.exit(2);
+		}
+		return null;
 		// Things to do are pending
 	}
 
@@ -312,8 +346,22 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
 
 	@Override
 	public String visit(ArrayAssignmentStatement n, String argu) {
-		String varType = n.f0.f0.toString();
-		// MISSING
+		String varType = n.f0.accept(this, null);
+		if (varType.equals("int []") == false) {
+			System.out.println("Expected element of type \"int[]\"");
+			System.exit(2);
+		}
+		String tablePosition = n.f2.accept(this, null);
+		if (tablePosition.equals("int") == false) {
+			System.out.println("Expected position of type int");
+			System.exit(2);
+		}
+		String assignedValue = n.f5.accept(this, null);
+		if (assignedValue.equals("int") == false) {
+			System.out.println("Expected assigned value of type int");
+			System.exit(2);
+		}
+		return null;
 
 	}
 
@@ -524,22 +572,49 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
 
 	@Override
 	public String visit(MessageSend n, String argu) {
-		// MISSING
+		String lol = n.f4.accept(this, null);
+		if (lol != null) {
+			System.out.println("THE GLORIOUS EXPRESSION LIST IS " + lol);
+			System.exit(69);
+		}
+		return null;
 	}
 
-   /**
-   * f0 -> Expression()
-   * f1 -> ( ExpressionRest() )* // NodeList optional
-   */
+    /**
+    * f0 -> Expression()
+    * f1 -> ExpressionTail()
+    */
 
 	@Override
 	public String visit(ExpressionList n, String argu) {
-		// MISSING
+		String expr = n.f0.accept(this, null);
+		if (expr == null) {
+			return "( )";
+		}
+		return "( " + expr + ", " + n.f1.accept(this, "") + ")";
 	}
 
+    /**
+    * f0 -> ( ExpressionTerm() )*
+    */
 	@Override
-	public String visit(ExpressionRest n, String argu) {
-		return n.f1.accept(this, argu);
+	public String visit(ExpressionTail n, String argu) {
+		return n.f0.accept(this, null);
+	}
+
+    /**
+    * f0 -> ","
+    * f1 -> Expression()
+    */
+
+	@Override
+	public String visit(ExpressionTerm n, String argu) {
+		String expr = n.f1.accept(this, null);
+		if (expr != null) {
+			return expr + ", ";
+		} else {
+			return ", ";
+		}
 	}
 
    /**
@@ -589,11 +664,56 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
 
 	/**
     * f0 -> IDENTIFIER
+    *  
+	* method params > method local vars > class data members > superclass data members
+	*
     */	
 
 	@Override
 	public String visit(Identifier n, String argu) {
-		// MISSING
+		if (visitingClass_ != null && visitingMethod_ != null) {	// Check the current method of the class that is being examined
+			String varName = n.f0.toString();
+			Class cls = symbolTable_.getClass(visitingClass_);
+			if (cls == null) {
+				System.out.println("Class " + visitingClass_ + " was not identified.");
+				System.exit(2);
+			}
+			Method m = cls.getMethod(visitingMethod_);
+			if (m == null) {
+				System.out.println("Method " + visitingMethod_ + " of class " + visitingClass_ + " was not identified.");
+				System.exit(2);
+			}
+			Variable var = m.getParameter(varName);
+			if (var != null) {
+				return var.getType();
+			} else {
+				var = m.getLocalVariable(varName);
+				if (var != null) {
+					return var.getName();
+				} else {
+					var = cls.getDataMember(varName);
+					if (var == null) {
+						if (cls.isSubclass() == true) {
+							cls = symbolTable_.getClass(cls.getSuperName());
+							while (cls != null) {
+								var = cls.getDataMember(varName);
+								if (var != null) {
+									return var.getType();
+								} else {
+									cls = symbolTable_.getClass(cls.getSuperName());
+								}
+							}
+							return null;
+						} else {
+							return null;
+						}
+					} else {
+						return var.getType();
+					}
+				}
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -655,8 +775,9 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
 	public String visit(NotExpression n, String argu) {
 		String varExpressionType = n.f1.accept(this, null);
 		if (varExpressionType.equals("boolean") == false) {
-			System.out.println("")
+			System.out.println("");
 		}
+		return "boolean";
 	}
 
     /**
@@ -735,6 +856,18 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
 			return "error";
 		}
 	}
-
+	public boolean classIsNull(){
+		if (visitingClass_ == null) {
+			return true;
+		}
+		return false;	
+	}
+	
+	public boolean methodIsNull(){
+		if (visitingMethod_ == null){
+			return true;
+		}
+		return false;
+	}
 
 }

@@ -43,6 +43,15 @@ public class Class{
 		return dataMembers_;
 	}
 
+	public Variable getDataMember(String dmName) {
+		for (Variable v : dataMembers_) {
+			if (v.getName().equals(dmName) == true) {
+				return v;
+			}
+		}
+		return null;
+	}
+
 	public List<Method> getMethods(){
 		return methods_;
 	}

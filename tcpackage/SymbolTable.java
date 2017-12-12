@@ -107,6 +107,32 @@ public class SymbolTable{
 		return true;
 	}
 
+
+	public boolean compatible (String type1, String type2) {
+		if (type1.equals("int []") && type2.equals("int []")) {
+			return true;
+		} else if (type1.equals("int") && type2.equals("int")) {
+			return true;
+		} else if (type1.equals("boolean") && type2.equals("boolean")) {
+			return true;
+		} else {
+			if (type1.equals(type2) == true) {
+				return true;
+			} else {
+				Class cls = this.getClass(type2);
+				cls = this.getClass(cls.getSuperName());
+				while (cls != null) {
+					if (cls.getName().equals(type1) == true) {
+						return true;
+					} else {
+						cls = this.getClass(cls.getSuperName());
+					}
+				}
+				return false;
+			}
+		}
+	}
+
 }	/* END OF CLASS */
 
 
