@@ -109,6 +109,10 @@ public class SymbolTable{
 
 
 	public boolean compatible (String type1, String type2) {
+		if (type1 == null || type2 == null) {
+			System.out.println("Argument compatibility check error");
+			System.exit(3);
+		}
 		if (type1.equals("int []") && type2.equals("int []")) {
 			return true;
 		} else if (type1.equals("int") && type2.equals("int")) {
@@ -168,6 +172,64 @@ public class SymbolTable{
 			return null;
 		}
 	}
+
+	/* Misleading name - it actually returns the type of varName given
+	* varName could be a Type, in which case the type is returned with no further checks
+	*/
+public String IdentifierToType(String vClass, String vMethod, String varName) {
+	if(varName == null) {
+		System.out.println("ID2TypeError");
+		System.exit(2);
+	}
+	if (this.primitive(varName) == true || this.containsKey(varName) == true) {
+		return varName;
+	}
+	if (vClass != null && vMethod != null) {	// Check the current method of the class that is being examined
+		if (varName.equals("this") == true) {
+			return vClass;
+		}
+		Class cls = this.getClass(vClass);
+		if (cls == null) {
+			System.out.println("Class " + vClass + " was not identified.");
+			System.exit(2);
+		}
+		Method m = cls.getMethod(vMethod);
+		if (m == null) {
+			System.out.println("Method " + vMethod + " of class " + vClass + " was not identified.");
+			System.exit(2);
+		}
+		Variable var = m.getParameter(varName);
+		if (var != null) {
+			return var.getType();
+		} else {
+			var = m.getLocalVariable(varName);
+			if (var != null) {
+				return var.getType();
+			} else {
+				var = cls.getDataMember(varName);
+				if (var == null) {
+					if (cls.isSubclass() == true) {
+						cls = this.getClass(cls.getSuperName());
+						while (cls != null) {
+							var = cls.getDataMember(varName);
+							if (var != null) {
+								return var.getType();
+							} else {
+								cls = this.getClass(cls.getSuperName());
+							}
+						}
+						return null;
+					} else {
+						return null;
+					}
+				} else {
+					return var.getType();
+				}
+			}
+		}
+	}
+	return null;
+}	
 
 }	/* END OF CLASS */
 

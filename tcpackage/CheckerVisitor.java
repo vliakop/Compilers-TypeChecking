@@ -12,12 +12,14 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
 	private String visitingClass_;
 	private String visitingMethod_;
 	boolean needID_;
+	String globalStr;
 
 	public CheckerVisitor(SymbolTable symbolTable) {
 		symbolTable_ = symbolTable;
 		visitingClass_ = null;
 		visitingMethod_ = null;
 		needID_ = false;
+		globalStr = "";
 		if (symbolTable_.subclassChecks() == false) {
 			System.out.println("subclassChecks failed");
 			System.exit(2);
@@ -189,6 +191,7 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
 		n.f7.accept(this, null);	
 		n.f8.accept(this, null);	
 		String returnValue = n.f10.accept(this, null);
+		returnValue = symbolTable_.IdentifierToType(visitingClass_, visitingMethod_, returnValue);
 		if (symbolTable_.compatible(returnType, returnValue) == false) {
 			System.out.println("Expected return type of " + returnType + ". Returned type is " + returnValue + " in method " + visitingClass_ +"::" + visitingMethod_);
 			System.exit(2);
@@ -224,10 +227,13 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
 		int which = n.f0.f0.which;
 		String paramType = determineParamType(n, which);
 		if (paramType.equals("int") || paramType.equals("boolean") || paramType.equals("int []")){
-			return null;
+			return paramType; //  Mipos return null?
 		}
 		if (symbolTable_.containsKey(paramType) == false) {
 			System.out.println("Unknown type " + paramType + " for parameter '" + n.f1.f0.toString() + "'");
+			System.exit(2);
+		} else { // Do I need this?
+			return paramType;
 		}
 		return null;
 	}
@@ -329,8 +335,20 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
 
 	@Override
 	public String visit(AssignmentStatement n, String argu) {
-		String varType = n.f0.accept(this, null);
+		String varName = n.f0.f0.toString();
+//		System.out.println("AssignmentStatement in varName is " + varName);
+		String varType = symbolTable_.IdentifierToType(visitingClass_, visitingMethod_, varName);
 		String expType = n.f2.accept(this, null);
+//		System.out.println("AssignmentStatement in expType is " + expType);
+		if (expType == null) {
+			System.out.println("AS extType CheckError");
+			System.exit(2);
+		}
+		if (symbolTable_.primitive(expType) == false){
+			if (symbolTable_.containsKey(expType) == false) {	//  cover the A a = new A();
+				expType = symbolTable_.IdentifierToType(visitingClass_, visitingMethod_, expType);
+			}
+		}
 		if (symbolTable_.compatible(varType, expType) == false) {
 			System.out.println("Expected expression of type " + varType + " instead of type " + expType + "in assignment");
 			System.exit(2);
@@ -351,17 +369,35 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
 
 	@Override
 	public String visit(ArrayAssignmentStatement n, String argu) {
-		String varType = n.f0.accept(this, null);
+
+		String varName = n.f0.f0.toString();
+		String varType = symbolTable_.IdentifierToType(visitingClass_, visitingMethod_, varName);
 		if (varType.equals("int []") == false) {
 			System.out.println("Expected element of type \"int[]\"");
 			System.exit(2);
 		}
 		String tablePosition = n.f2.accept(this, null);
+		if (tablePosition == null) {
+			System.out.println("AA tablePosition CheckError");
+			System.exit(2);
+		}
+		if (symbolTable_.primitive(tablePosition) == false){
+			//  Got an identifier
+			tablePosition = symbolTable_.IdentifierToType(visitingClass_, visitingMethod_, tablePosition);
+		}
 		if (tablePosition.equals("int") == false) {
 			System.out.println("Expected position of type int");
 			System.exit(2);
 		}
 		String assignedValue = n.f5.accept(this, null);
+		if (assignedValue == null) {
+			System.out.println("AA assignedValue CheckError");
+			System.exit(2);
+		}
+		if (symbolTable_.primitive(assignedValue) == false){
+			//  Got an identifier
+			assignedValue = symbolTable_.IdentifierToType(visitingClass_, visitingMethod_, assignedValue);
+		}
 		if (assignedValue.equals("int") == false) {
 			System.out.println("Expected assigned value of type int");
 			System.exit(2);
@@ -383,6 +419,14 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
 	@Override
 	public String visit(IfStatement n, String argu) {
 		String varExpressionType = n.f2.accept(this, null);
+		if (varExpressionType == null) {
+			System.out.println("IF assignedValue CheckError");
+			System.exit(2);
+		}
+		if (symbolTable_.primitive(varExpressionType) == false){
+			//  Got an identifier
+			varExpressionType = symbolTable_.IdentifierToType(visitingClass_, visitingMethod_, varExpressionType);
+		}
 		if (varExpressionType.equals("boolean") == false) {
 			System.out.println("Ifstatements need boolean expressions");
 			System.exit(2);
@@ -405,8 +449,12 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
 	public String visit(WhileStatement n, String argu) {
 		String varExpressionType = n.f2.accept(this, null);
 		if (varExpressionType == null) {
-			System.out.println("WhileStatement CheckError");
+			System.out.println("WS assignedValue CheckError");
 			System.exit(2);
+		}
+		if (symbolTable_.primitive(varExpressionType) == false){
+			//  Got an identifier
+			varExpressionType = symbolTable_.IdentifierToType(visitingClass_, visitingMethod_, varExpressionType);
 		}
 		if (varExpressionType.equals("boolean") == false) {
 			System.out.println("Whilestatements need boolean expressions");
@@ -430,6 +478,10 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
 		if (varExpressionType == null){
 			System.out.println("PrintStatements need int expressions");
 			System.exit(2);
+		}
+		if (symbolTable_.primitive(varExpressionType) == false){
+			//  Got an identifier
+			varExpressionType = symbolTable_.IdentifierToType(visitingClass_, visitingMethod_, varExpressionType);
 		}
 		if (varExpressionType.equals("int") == false) {
 			System.out.println("PrintStatements need int expressions but I got " + varExpressionType);
@@ -464,7 +516,9 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
 	@Override
 	public String visit(AndExpression n, String argu) {
 		String pe1 = n.f0.accept(this, null);
+		pe1 = symbolTable_.IdentifierToType(visitingClass_, visitingMethod_, pe1);
 		String pe2 = n.f2.accept(this, null);
+		pe2 = symbolTable_.IdentifierToType(visitingClass_, visitingMethod_, pe2);
 		if (pe1.equals("boolean") == false || pe2.equals("boolean") == false) {
 			System.out.println("Expected boolean in AndExpression");
 			System.exit(2);
@@ -480,7 +534,9 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
 	@Override
 	public String visit(CompareExpression n, String argu) {
 		String pe1 = n.f0.accept(this, null);
+		pe1 = symbolTable_.IdentifierToType(visitingClass_, visitingMethod_, pe1);
 		String pe2 = n.f2.accept(this, null);
+		pe2 = symbolTable_.IdentifierToType(visitingClass_, visitingMethod_, pe2);
 		if (pe1.equals("int") == false || pe2.equals("int") == false) {
 			System.out.println("Expected int in CompareExpression");
 			System.exit(2);
@@ -498,9 +554,11 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
 	@Override
 	public String visit(PlusExpression n, String argu) {
 		String pe1 = n.f0.accept(this, null);
+		pe1 = symbolTable_.IdentifierToType(visitingClass_, visitingMethod_, pe1);
 		String pe2 = n.f2.accept(this, null);
+		pe2 = symbolTable_.IdentifierToType(visitingClass_, visitingMethod_, pe2);
 		if (pe1.equals("int") == false || pe2.equals("int") == false) {
-			System.out.println("Expected int in PlusExpression");
+			System.out.println("Expected int in PlusExpression but I got " + pe1 + " ~ " + pe2);
 			System.exit(2);
 		}
 		return "int";
@@ -515,7 +573,9 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
 	@Override
 	public String visit(MinusExpression n, String argu) {
 		String pe1 = n.f0.accept(this, null);
+		pe1 = symbolTable_.IdentifierToType(visitingClass_, visitingMethod_, pe1);
 		String pe2 = n.f2.accept(this, null);
+		pe2 = symbolTable_.IdentifierToType(visitingClass_, visitingMethod_, pe2);
 		if (pe1.equals("int") == false || pe2.equals("int") == false) {
 			System.out.println("Expected int in MinusExpression");
 			System.exit(2);
@@ -532,7 +592,9 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
 	@Override
 	public String visit(TimesExpression n, String argu) {
 		String pe1 = n.f0.accept(this, null);
+		pe1 = symbolTable_.IdentifierToType(visitingClass_, visitingMethod_, pe1);
 		String pe2 = n.f2.accept(this, null);
+		pe2 = symbolTable_.IdentifierToType(visitingClass_, visitingMethod_, pe2);
 		if (pe1.equals("int") == false || pe2.equals("int") == false) {
 			System.out.println("Expected int in TimesExpression");
 			System.exit(2);
@@ -550,7 +612,9 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
 	@Override
 	public String visit(ArrayLookup n, String argu) {
 		String pe1 = n.f0.accept(this, null);
+		pe1 = symbolTable_.IdentifierToType(visitingClass_, visitingMethod_, pe1);
 		String pe2 = n.f2.accept(this, null);
+		pe2 = symbolTable_.IdentifierToType(visitingClass_, visitingMethod_, pe2);
 		if (pe1.equals("int []") == false || pe2.equals("int") == false) {
 			System.out.println("Error in ArrayLookup");
 			System.exit(2);
@@ -567,6 +631,7 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
 	@Override
 	public String visit(ArrayLength n, String argu) {
 		String pe = n.f0.accept(this, null);
+		pe = symbolTable_.IdentifierToType(visitingClass_, visitingMethod_, pe);
 		if (pe.equals("int []") == false) {
 			System.out.println("Expected array variable in ArrayLength");
 			System.exit(2);
@@ -575,7 +640,7 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
 	}
 
    /**
-   * f0 -> PrimaryExpression()
+   * f0 -> PrimaryExpression() - it will be an identifier (most likely)
    * f1 -> "."
    * f2 -> Identifier()
    * f3 -> "("
@@ -589,7 +654,13 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
 			System.out.println("MS CheckError");
 			System.exit(2);
 		}
-		String className = n.f0.accept(this, null);
+		String objectName = n.f0.accept(this, null);
+		String className = objectName;
+//		System.out.println("object name in Message is " + objectName);
+		if (symbolTable_.containsKey(objectName) == false) {
+			className = symbolTable_.IdentifierToType(visitingClass_, visitingMethod_, objectName);
+		}
+//		System.out.println("object class in Message is " + className);
 		if (symbolTable_.primitive(className) == true) {
 			System.out.println("Expected User-Defined Class. Primitive '" + className + "' given instead");
 			System.exit(2);
@@ -599,9 +670,9 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
 			System.out.println("Class '" + className + "' does not exist. Cannot call objects of that type");
 			System.exit(2);
 		}
-		needID_ = true;
+//		needID_ = true;
 		String methodName = n.f2.accept(this, null);
-		needID_ = false;
+//		needID_ = false;
 		Method m = symbolTable_.getMethodFromClass(methodName, className);
 		if (m == null) {
 			System.out.println("Method '" + methodName + "' of class '" + className + "' wasn't defined.");
@@ -616,13 +687,25 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
 		if (paramsGiven == null) {
 			paramsGiven = "( )";
 		}
-		if(params.equals(paramsGiven) == true) {
-
-			return m.getReturnType();
-		} else {
-			return null;
+		if (paramsGiven.equals("( )") == true) {	//  Check for no argus
+			if (paramsGiven.equals(params) == true) {
+				return m.getReturnType();
+			}
 		}
-
+//		System.out.println(params + " XXX " + paramsGiven);
+		String[] paramsAr = params.replace("(", "").replace(")", "").replace(" ", "").split(",");
+		String[] paramsGivenAr = paramsGiven.replace("(", "").replace(")", "").replace(" ", "").split(",");
+		for (int i = 0; i < paramsAr.length; i++) {
+			String arguType = symbolTable_.IdentifierToType(visitingClass_, visitingMethod_, paramsGivenAr[i]);
+			String paramType = symbolTable_.IdentifierToType(visitingClass_, visitingMethod_, paramsAr[i]);
+//			System.out.println("arguType is " + arguType);
+//			System.out.println("paramType is " + paramType);
+//			System.out.println("paramsGivenAr[i] is " + paramsGivenAr[i]);
+			if (symbolTable_.compatible(paramType, arguType) == false) {
+				return null;
+			}
+		}
+		return m.getReturnType();
 	}
 
     /**
@@ -636,7 +719,14 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
 		if (expr == null) {
 			return "( )";
 		}
-		return "( " + expr + ", " + n.f1.accept(this, "") + ")";
+		String random = n.f1.accept(this, null);
+		if (random == null) {
+			globalStr = "";
+			return "( " + expr + ", " + ")";
+		} else {
+			globalStr = "";
+			return "( " + expr + ", " + random + ")";
+		}
 	}
 
     /**
@@ -644,7 +734,8 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
     */
 	@Override
 	public String visit(ExpressionTail n, String argu) {
-		return n.f0.accept(this, null);
+		n.f0.accept(this, null);
+		return globalStr;
 	}
 
     /**
@@ -656,9 +747,12 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
 	public String visit(ExpressionTerm n, String argu) {
 		String expr = n.f1.accept(this, null);
 		if (expr != null) {
-			return expr + ", ";
+			globalStr = globalStr + expr + ", ";
+			return null;
 		} else {
-			return ", ";
+//			System.out.println("hi!");
+			globalStr = globalStr + ", ";
+			return null;
 		}
 	}
 
@@ -716,52 +810,7 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
 
 	@Override
 	public String visit(Identifier n, String argu) {
-		if (needID_ == true) {
-			return n.f0.toString();
-		}
-		if (visitingClass_ != null && visitingMethod_ != null) {	// Check the current method of the class that is being examined
-			String varName = n.f0.toString();
-			Class cls = symbolTable_.getClass(visitingClass_);
-			if (cls == null) {
-				System.out.println("Class " + visitingClass_ + " was not identified.");
-				System.exit(2);
-			}
-			Method m = cls.getMethod(visitingMethod_);
-			if (m == null) {
-				System.out.println("Method " + visitingMethod_ + " of class " + visitingClass_ + " was not identified.");
-				System.exit(2);
-			}
-			Variable var = m.getParameter(varName);
-			if (var != null) {
-				return var.getType();
-			} else {
-				var = m.getLocalVariable(varName);
-				if (var != null) {
-					return var.getType();
-				} else {
-					var = cls.getDataMember(varName);
-					if (var == null) {
-						if (cls.isSubclass() == true) {
-							cls = symbolTable_.getClass(cls.getSuperName());
-							while (cls != null) {
-								var = cls.getDataMember(varName);
-								if (var != null) {
-									return var.getType();
-								} else {
-									cls = symbolTable_.getClass(cls.getSuperName());
-								}
-							}
-							return null;
-						} else {
-							return null;
-						}
-					} else {
-						return var.getType();
-					}
-				}
-			}
-		}
-		return null;
+		return n.f0.toString();
 	}
 
 	/**
@@ -789,6 +838,7 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
 	@Override
 	public String visit(ArrayAllocationExpression n, String argu) {
 		String varExpressionType = n.f3.accept(this, null);
+		varExpressionType = symbolTable_.IdentifierToType(visitingClass_, visitingMethod_, varExpressionType);
 		if (varExpressionType.equals("int") == false) {
 			System.out.println("Expected int value in array allocation");
 			System.exit(2);
