@@ -298,6 +298,10 @@ public class BuildVisitor extends DepthFirstVisitor{
 		symbolTable_.print();
 	}
 	
+	public void printInfo(){
+		symbolTable_.printInfo();
+	}
+
 	public String determineVarType(VarDeclaration n, int which){
 		if (which == 0){
 			return  "int []"; 

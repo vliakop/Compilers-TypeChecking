@@ -42,6 +42,12 @@ public class SymbolTable{
 		}
 	}
 
+	public void printInfo(){
+		for (Map.Entry<String, Class> e : table_.entrySet()){
+			e.getValue().printInfo();
+		}
+	}
+
 	/* checks for datamember and no method overloading in subclasse: ensures that the parent class exists */
 	public boolean subclassChecks(){
 

@@ -12,7 +12,7 @@ public class TypeCheck{
 			Node root = parser.Goal();
 			BuildVisitor bv = new BuildVisitor();
 			root.accept(bv);
-			bv.print();
+			bv.printInfo();
 			bv.symbolTable_.subclassChecks();
 			CheckerVisitor typeChecker = new CheckerVisitor(bv.symbolTable_);
 			root.accept(typeChecker, null);

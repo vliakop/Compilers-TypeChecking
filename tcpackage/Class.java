@@ -18,6 +18,7 @@ public class Class{
 	private List<Method> methods_;
 	private int offset_;
 
+
 	public Class(String superName, String name, int offset){
 		superName_ = superName;
 		name_ = name;
@@ -128,5 +129,23 @@ public class Class{
 
 	public void print(){
 		System.out.println(this.toString());
-	}	
+	}
+
+	public void printInfo() {
+	String dms = "";
+	String meths = "";
+
+	for (Variable v : dataMembers_) {
+		if (v.getOffset() >= 0) {
+			dms = dms + name_ + "." + v.getName() + " : " + v.getOffset() + "\n";
+		}
+	}
+	for (Method m : methods_) {
+		if (m.getOffset() >= 0) {
+			meths = meths + name_ + "." + m.getName() + " : " + m.getOffset() + "\n";
+		}	
+	}
+	System.out.println(dms + meths);
+}
+	
 }
