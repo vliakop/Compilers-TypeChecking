@@ -61,11 +61,12 @@ public class SymbolTable{
 					System.exit(1);
 				}
 				while (pcls != null) {
-					boolean all = allDifferentVars(cls.getDataMembers(), pcls.getDataMembers());
+				/*	boolean all = allDifferentVars(cls.getDataMembers(), pcls.getDataMembers());
 					if (all == false) {
 						System.out.print("Redeclaring already-existent datamembers in class " + cls.getName() + " from baseclass " + pcls.getName());
 						System.exit(1);
 					}
+				*/
 					boolean overload = noOverloading(cls.getMethods(), pcls.getMethods());
 					if (overload == false) {
 						System.out.println("In class " + cls.getName() + " cannot overload methods previously declared in class " + pcls.getName());

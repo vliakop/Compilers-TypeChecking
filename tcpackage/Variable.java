@@ -9,12 +9,14 @@ public class Variable{
 	
 	private String name_;
 	private String type_;
-	private int offset_;
+	private int offset_;	
+	private boolean overloaded_;
 	
 	public Variable(String name, String type){
 		name_ = name;
 		type_ = type;
 		offset_ = -1;
+		overloaded_ = false;
 	}
 	
 	public String getName(){
@@ -29,6 +31,10 @@ public class Variable{
 		return offset_;
 	}
 
+	public boolean getOverloaded(){
+		return overloaded_;
+	}	
+
 	public void setName(String name){
 		name_ = name;
 	}
@@ -39,6 +45,10 @@ public class Variable{
 
 	public void setOffset(int offset){
 		offset_ = offset;	
+	}
+	
+	public void setOverloaded(boolean overload){
+		overloaded_ = overload;	
 	}
 	
 	public void print(){

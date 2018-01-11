@@ -141,7 +141,7 @@ public class Class{
 		}
 	}
 	for (Method m : methods_) {
-		if (m.getOffset() >= 0) {
+		if (m.getOffset() >= 0 && m.getOverloaded() == false) {
 			meths = meths + name_ + "." + m.getName() + " : " + m.getOffset() + "\n";
 		}	
 	}

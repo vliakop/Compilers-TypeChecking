@@ -13,6 +13,7 @@ public class BuildVisitor extends DepthFirstVisitor{
 	private int globalOffset_;
 	private int methodOffset_;
 	private boolean extention_; //  if a class extends some other
+	private boolean firstTime_;
 
 	public BuildVisitor(){
 		
@@ -22,6 +23,7 @@ public class BuildVisitor extends DepthFirstVisitor{
 		globalOffset_ = 0; // for Data Members
 		methodOffset_ = 0; // for methods
 		extention_ = false;
+		firstTime_ = true;
 
 	}
 	
@@ -100,6 +102,9 @@ public class BuildVisitor extends DepthFirstVisitor{
 		n.f5.accept(this);	
 		visitingClass_ = null;
 		visitingMethod_ = null;	
+		globalOffset_ = 0;
+		methodOffset_ = 0;
+		firstTime_ = true;
 	}	
 	
 	@Override
@@ -131,6 +136,9 @@ public class BuildVisitor extends DepthFirstVisitor{
 		n.f7.accept(this);	
 		visitingClass_ = null;
 		visitingMethod_ = null;	
+		globalOffset_ = 0;
+		methodOffset_ = 0;
+		firstTime_ = true;
 	}
 
     /**
@@ -167,10 +175,16 @@ public class BuildVisitor extends DepthFirstVisitor{
 				offset = globalOffset_;
 				this.updateOffset(varType);
 			} else {
-				offset = calculateVarOffset(varType, varName);	// else calculate the offset
-				if (offset == globalOffset_){	// if it is not different than the current (lower) - it's a new data member
+				if (firstTime_ == true){
+					globalOffset_ = calculateVarOffset(varType, varName);	// else calculate the offset
+					firstTime_ = false;
+				}  
+				offset = globalOffset_;
+				this.updateOffset(varType);
+/* rm this			if (offset == globalOffset_){	// if it is not different than the current (lower) - it's a new data member
 					this.updateOffset(varType);
 				}
+*/
 			}
 			var.setOffset(offset);
 		} else {
@@ -217,8 +231,9 @@ public class BuildVisitor extends DepthFirstVisitor{
 			this.updateMethodOffset();
 		} else {
 			offset = calculateMethodOffset(methodName);
-			if (offset == methodOffset_) {
-				this.updateMethodOffset();
+			if (offset <= 0) {
+				offset = -offset;
+				m.setOverloaded(true);	
 			}
 		}
 		m.setOffset(offset);
@@ -346,12 +361,16 @@ public class BuildVisitor extends DepthFirstVisitor{
 		}
 	}
 
-	public void updateOffset(String varType) {
+	public int updateOffset(String varType) {
+		System.out.println("uO vartype is " + varType);
 		if (varType.equals("boolean") == true) {
 			globalOffset_ = globalOffset_ + 1;
+		} else if (varType.equals("int []") == true){
+			globalOffset_ = globalOffset_ + 8;
 		} else {
 			globalOffset_ = globalOffset_ + 4;
 		}
+		return globalOffset_;
 	}
 
 	public void updateMethodOffset(){
@@ -364,6 +383,27 @@ public class BuildVisitor extends DepthFirstVisitor{
 		Class cls = symbolTable_.getClass(visitingClass_);
 		String baseClass = cls.getSuperName();
 		Class pcls = symbolTable_.getClass(baseClass);
+		if (pcls == null){
+			System.out.println("calculateVarOffsetError");
+		} 
+		
+		List<Variable> varList = pcls.getDataMembers();
+		Variable v = varList.get(varList.size() - 1);
+		if (v == null){
+			System.out.println("calculateVarOffsetError in Variable::v");
+		}
+		System.out.println("cVO returns " + v.getOffset() + " from parentclass " + baseClass);
+		int temp;	
+		varType = v.getType();
+		if (varType.equals("boolean") == true) {
+			temp = 1;
+		} else if (varType.equals("int []") == true){
+			temp = 8;
+		} else {
+			temp = 4;
+		}
+		return v.getOffset() + temp;
+	/*
 		while (pcls != null) {
 			List<Variable> varList = pcls.getDataMembers();
 			for (Variable v : varList) {
@@ -384,10 +424,12 @@ public class BuildVisitor extends DepthFirstVisitor{
 			}
 		}
 		return globalOffset_;
+	*/
 	}
 
 	public int calculateMethodOffset(String methodName) {
 
+		int max =  0;
 		Class cls = symbolTable_.getClass(visitingClass_);
 		String baseClass = cls.getSuperName();
 		Class pcls = symbolTable_.getClass(baseClass);
@@ -395,7 +437,10 @@ public class BuildVisitor extends DepthFirstVisitor{
 			List<Method> mList = pcls.getMethods();
 			for (Method m : mList) {
 				if (m.getName().equals(methodName) == true) {
-					return m.getOffset();
+					return -m.getOffset();
+				}
+				if (m.getOffset() > max) {
+					max = m.getOffset();
 				}
 			}	//  ran dry of the data member list of an ancestor was empty, try the next one, if it exists
 			if (pcls.isSubclass() == true) {
@@ -405,9 +450,13 @@ public class BuildVisitor extends DepthFirstVisitor{
 					System.exit(1);
 				}
 			} else {
-				return methodOffset_;
+				pcls = null;
 			}
 		}
+		if (methodOffset_ > max) {	// if it's not overloading
+			max = methodOffset_;
+		}
+		methodOffset_ = max + 8;		
 		return methodOffset_;
 	}
 }

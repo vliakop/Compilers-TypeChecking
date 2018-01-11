@@ -24,13 +24,14 @@ public class Method{
 	private List<Variable> parameters_;
 	private List<Variable> localVariables_;
 	private int offset_;
-		
+	private boolean overloaded_;	
 	public Method(String returnType, String name, int offset){
 		returnType_ = returnType;
 		name_ = name;
 		parameters_ = new ArrayList<Variable>();
 		localVariables_ = new ArrayList<Variable>();
-		offset_ = offset;	
+		offset_ = offset;
+		overloaded_ = false;	
 	}
 
 	public Method(String returnType, String name){
@@ -39,6 +40,7 @@ public class Method{
 		parameters_ = new ArrayList<Variable>();
 		localVariables_ = new ArrayList<Variable>();	
 		offset_ = -1;
+		overloaded_ = false;
 	}
 	
 	public int getOffset() {
@@ -51,6 +53,10 @@ public class Method{
 	
 	public String getName(){
 		return name_;
+	}
+	
+	public boolean getOverloaded(){
+		return overloaded_;
 	}
 	
 	public List<Variable> getParameters(){
@@ -91,6 +97,10 @@ public class Method{
 		offset_ = offset;
 	}
 
+	public void setOverloaded(boolean overload){
+		overloaded_ = overload;
+	}
+	
 	public boolean addParameter(Variable parameter){
 		for (Variable p : parameters_) {
 			if (p.getName().equals(parameter.getName()) == true){
