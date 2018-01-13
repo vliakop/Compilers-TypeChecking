@@ -1,6 +1,7 @@
 package tcpackage;
 
 import java.util.*;
+import cgeneration.*;
 
 public class SymbolTable{
 
@@ -180,63 +181,198 @@ public class SymbolTable{
 		}
 	}
 
-	/* Misleading name - it actually returns the type of varName given
-	* varName could be a Type, in which case the type is returned with no further checks
-	*/
-public String IdentifierToType(String vClass, String vMethod, String varName) {
-	if(varName == null) {
-		System.out.println("ID2TypeError");
-		System.exit(2);
-	}
-	if (this.primitive(varName) == true || this.containsKey(varName) == true) {
-		return varName;
-	}
-	if (vClass != null && vMethod != null) {	// Check the current method of the class that is being examined
-		if (varName.equals("this") == true) {
-			return vClass;
-		}
-		Class cls = this.getClass(vClass);
-		if (cls == null) {
-			System.out.println("Class " + vClass + " was not identified.");
+		/* Misleading name - it actually returns the type of varName given
+		* varName could be a Type, in which case the type is returned with no further checks
+		*/
+	public String IdentifierToType(String vClass, String vMethod, String varName) {
+		if(varName == null) {
+			System.out.println("ID2TypeError");
 			System.exit(2);
 		}
-		Method m = cls.getMethod(vMethod);
-		if (m == null) {
-			System.out.println("Method " + vMethod + " of class " + vClass + " was not identified.");
-			System.exit(2);
+		if (this.primitive(varName) == true || this.containsKey(varName) == true) {
+			return varName;
 		}
-		Variable var = m.getParameter(varName);
-		if (var != null) {
-			return var.getType();
-		} else {
-			var = m.getLocalVariable(varName);
+		if (vClass != null && vMethod != null) {	// Check the current method of the class that is being examined
+			if (varName.equals("this") == true) {
+				return vClass;
+			}
+			Class cls = this.getClass(vClass);
+			if (cls == null) {
+				System.out.println("Class " + vClass + " was not identified.");
+				System.exit(2);
+			}
+			Method m = cls.getMethod(vMethod);
+			if (m == null) {
+				System.out.println("Method " + vMethod + " of class " + vClass + " was not identified.");
+				System.exit(2);
+			}
+			Variable var = m.getParameter(varName);
 			if (var != null) {
 				return var.getType();
 			} else {
-				var = cls.getDataMember(varName);
-				if (var == null) {
-					if (cls.isSubclass() == true) {
-						cls = this.getClass(cls.getSuperName());
-						while (cls != null) {
-							var = cls.getDataMember(varName);
-							if (var != null) {
-								return var.getType();
-							} else {
-								cls = this.getClass(cls.getSuperName());
-							}
-						}
-						return null;
-					} else {
-						return null;
-					}
-				} else {
+				var = m.getLocalVariable(varName);
+				if (var != null) {
 					return var.getType();
+				} else {
+					var = cls.getDataMember(varName);
+					if (var == null) {
+						if (cls.isSubclass() == true) {
+							cls = this.getClass(cls.getSuperName());
+							while (cls != null) {
+								var = cls.getDataMember(varName);
+								if (var != null) {
+									return var.getType();
+								} else {
+									cls = this.getClass(cls.getSuperName());
+								}
+							}
+							return null;
+						} else {
+							return null;
+						}
+					} else {
+						return var.getType();
+					}
 				}
 			}
 		}
+		return null;
+	}	
+
+	/* Useless for the code generation part */
+	public int fieldMaxOffset(String className) {
+
+		int max = -1;
+		Class cls = this.getClass(className);
+		if (cls == null){
+			return max;
+		}
+		List<Variable> dms = cls.getDataMembers();
+		int size = dms.size();
+		if (size > 0) {
+			try{
+				max = dms.get(size - 1).getOffset();
+			} catch (IndexOutOfBoundsException e){
+				System.out.println(e);
+			}
+			
+		} else {
+			Class pcls = this.getClass(cls.getSuperName());
+			if (pcls == null) {	// a class without data members
+				return 0;
+			}
+			while(pcls != null) {
+				dms = pcls.getDataMembers();
+				size = dms.size();
+				if (size > 0) {
+					max = dms.get(size - 1).getOffset();
+					break;
+				}
+				pcls = this.getClass(pcls.getSuperName());
+			}
+		}
+		return max;
 	}
-	return null;
-}	
+
+	/* builds the classesinfo class */
+
+	public void buildClassesInfo(ClassesInfo ci) {
+
+		for (Map.Entry<String, Class> entry : table_.entrySet()) {
+
+			Class cls = entry.getValue();
+			List<Variable> dms = cls.getDataMembers();
+			int size = dms.size();
+
+			ObfuscatedClass oc = new ObfuscatedClass(cls.getSuperName(), cls.getName());
+			/* For every class and superclass: run the datamembers list from bottom to top, adding every element
+				at the beginning of the obfuscated variable list
+			*/
+			List<Variable> ocDms = oc.dataMembers_;
+			for (int i = size -1; i >= 0; i--) {
+				ocDms.add(0, dms.get(i));
+			}
+			Class pcls = this.getClass(oc.superName_);
+			while(pcls != null) {
+				dms = pcls.getDataMembers();
+				size = dms.size();
+				for (int i = size - 1; i >= 0; i--) {
+					ocDms.add(0, dms.get(i));
+				}
+				pcls = this.getClass(pcls.getSuperName());
+			}
+			int fieldBytes = 0;
+			for (Variable v : ocDms) {
+				String type = v.getType();
+				if (type.equals("boolean") == true) {
+					fieldBytes = fieldBytes + 1;
+				} else if (type.equals("int") == true) {
+					fieldBytes = fieldBytes + 4;
+				} else {
+					fieldBytes = fieldBytes + 8;
+				}
+			}
+			oc.fieldBytes_ = fieldBytes;
+			System.out.println("class: " + oc.name_ + "--> :" + ocDms.size() + " and total bytes of " + oc.fieldBytes_);
+
+			/* Now building the obfuscated methods */
+			List<Method> meths = cls.getMethods();
+			List<Method> ocMeths = oc.methods_;
+			
+			/* Find the maxMethodOffset to calculate the # of methods in a class */
+			int maxMethodOffset = 0;
+			for (Method m : meths) {
+				if (m.getOffset() > maxMethodOffset) {
+					maxMethodOffset = m.getOffset();
+				}
+			}
+			pcls = this.getClass(oc.superName_);
+			while (pcls != null) {
+				meths = pcls.getMethods();
+				for (Method m : meths) {
+					if (m.getOffset() > maxMethodOffset) {
+						maxMethodOffset = m.getOffset();
+					}
+				}
+				pcls = this.getClass(pcls.getSuperName());
+			}
+			int no = maxMethodOffset/8 + 1;
+			System.out.println("class: " + oc.name_ + " has " + no + " method(s) \n");
+
+			oc.methodBytes_ = no*8;
+			boolean found;
+			meths  = cls.getMethods();
+			for (int i = 0; i < no; i++) {
+				found = false;
+				meths  = cls.getMethods();
+				for (Method m : meths) {
+					if (i*8 == m.getOffset()){
+						ocMeths.add(m);
+						oc.methodInClass_.add(cls.getName());
+						found = true;
+						break;
+					}
+				}
+				if (found == false) {
+					System.out.println("I will search in parent meths");
+					pcls = this.getClass(oc.superName_);
+					while (pcls != null) {
+						meths = pcls.getMethods();
+						for (Method m : meths) {
+							if (i*8 == m.getOffset()) {
+								ocMeths.add(m);
+								oc.methodInClass_.add(pcls.getName());
+								found=  true;
+								break;
+							}
+						}
+						pcls = this.getClass(pcls.getSuperName());
+					}
+				}
+				System.out.println("Method " + ocMeths.get(i).getName() + " of class " + cls.getName() + " resides in class " + oc.methodInClass_.get(i) + "\n");
+			}	// for every method in the class
+		}	// For every class in the st::Map
+	}
 
 }	/* END OF CLASS */
 

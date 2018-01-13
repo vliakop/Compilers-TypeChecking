@@ -397,10 +397,10 @@ public class BuildVisitor extends DepthFirstVisitor{
 		varType = v.getType();
 		if (varType.equals("boolean") == true) {
 			temp = 1;
-		} else if (varType.equals("int []") == true){
-			temp = 8;
-		} else {
+		} else if (varType.equals("int") == true){
 			temp = 4;
+		} else {
+			temp = 8;
 		}
 		return v.getOffset() + temp;
 	/*

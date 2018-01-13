@@ -6,6 +6,7 @@ import java.util.*;
 import visitor.*;
 import syntaxtree.*;
 import tcpackage.*;
+import cgeneration.*;
 
 public class Main{
 	
@@ -27,6 +28,11 @@ public class Main{
 				}
 				bv.printInfo();
 				bv.symbolTable_.subclassChecks();
+				System.out.println("Maxfieldoffset of class E is " + bv.symbolTable_.fieldMaxOffset("D"));
+				ClassesInfo ci = new ClassesInfo();
+				bv.symbolTable_.buildClassesInfo(ci);
+
+
 				CheckerVisitor typeChecker = new CheckerVisitor(bv.symbolTable_);
 				root.accept(typeChecker, null);
 				System.out.println("Succesful type checking for file " + arg + "\n");

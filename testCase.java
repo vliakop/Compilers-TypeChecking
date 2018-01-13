@@ -47,7 +47,7 @@ class C extends A {
 class D extends C {
 
 	boolean flag;
-	
+	int flag2;
 	
 	public int getD(){ return 10; }
 	
@@ -55,4 +55,8 @@ class D extends C {
 	public int getA(){
 		return 10;
 	}
+}
+
+class E extends D {
+	public int extremeTesting(){ return 25; }
 }
