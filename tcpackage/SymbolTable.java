@@ -356,7 +356,7 @@ public class SymbolTable{
 				if (found == false) {
 					System.out.println("I will search in parent meths");
 					pcls = this.getClass(oc.superName_);
-					while (pcls != null) {
+					while (pcls != null && found == false) {
 						meths = pcls.getMethods();
 						for (Method m : meths) {
 							if (i*8 == m.getOffset()) {

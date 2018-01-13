@@ -9,8 +9,6 @@ public class ClassesInfo{
 
 	public ClassesInfo(){
 		table_ = new HashMap<String, ObfuscatedClass>();
-
-
 	}
 
 

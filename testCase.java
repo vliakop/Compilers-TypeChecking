@@ -20,6 +20,9 @@ class A {
 		return c;
 	}
 	
+	
+	public int allMyLife(){return 421;}
+	
 }
 
 
@@ -42,6 +45,8 @@ class B extends A{
 class C extends A {
 
 	boolean flag;
+	
+	public int allMyLife(){return 421;}
 }
 
 class D extends C {
