@@ -50,9 +50,11 @@ public class Main{
 				/* Code Generation */
 				ClassesInfo ci = new ClassesInfo();
 				bv.symbolTable_.buildClassesInfo(ci);
+
 				CGeneratorVisitor cgv = new CGeneratorVisitor(bv.symbolTable_, ci, "test");
 				cgv.vtables();
 				cgv.definitions();
+				root.accept(cgv, null);
 				
 
 			} catch (IOException e) {

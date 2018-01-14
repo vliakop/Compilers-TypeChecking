@@ -23,12 +23,38 @@ public class StringManager{
 	public String bitcast_ = " bitcast #typeFrom %#reg to #typeTo";
 	public String global_ = "@.#name = global [#size x #type] [#declarations]\n";
 
+	private int labelCounter_;
+	private int registerCounter_;
+	private String tag_;	// label already taken
+	private String register_;
+
 	/* Default strings */
 
 	
 	public StringManager(){
 		accumulator_ = "";
+		labelCounter_ = 1;
+		registerCounter_ = 1;
+		tag_ = "label";
+		register_ = "%_";
 	}
 
+	public String getLabel(){
+		String retVal = tag_ + String.valueOf(labelCounter_) + ":";
+		labelCounter_++;
+		return retVal;
+	}
+
+	public String getRegister(){
+		String retVal = register_ + String.valueOf(registerCounter_);
+		registerCounter_++;
+		return retVal;
+	}
+
+	public void reset(){
+		labelCounter_ = 1;
+		registerCounter_ = 1;
+		return;
+	}
 
 }
