@@ -41,13 +41,15 @@ public class BuildVisitor extends DepthFirstVisitor{
 			System.out.println("BuildError");
 			System.exit(1);	
 		}
-		visitingMethod_ =  n.f0.toString();
+		visitingMethod_ =  n.f6.toString();
 		Class cls = symbolTable_.getClass(visitingClass_);
 		if (cls == null){
 			System.out.println("BuildError");
 			System.exit(1);	
 		}
-		if (cls.addMethod(new Method("void", visitingMethod_ )) == false){
+		Method m = new Method("void", visitingMethod_);
+		m.setOffset(0);
+		if (cls.addMethod(m) == false){
 			System.out.println("BuildError");
 			System.exit(1);	
 		}
@@ -362,7 +364,7 @@ public class BuildVisitor extends DepthFirstVisitor{
 	}
 
 	public int updateOffset(String varType) {
-		System.out.println("uO vartype is " + varType);
+//		System.out.println("uO vartype is " + varType);
 		if (varType.equals("boolean") == true) {
 			globalOffset_ = globalOffset_ + 1;
 		} else if (varType.equals("int []") == true){
@@ -392,7 +394,7 @@ public class BuildVisitor extends DepthFirstVisitor{
 		if (v == null){
 			System.out.println("calculateVarOffsetError in Variable::v");
 		}
-		System.out.println("cVO returns " + v.getOffset() + " from parentclass " + baseClass);
+//		System.out.println("cVO returns " + v.getOffset() + " from parentclass " + baseClass);
 		int temp;	
 		varType = v.getType();
 		if (varType.equals("boolean") == true) {

@@ -313,15 +313,17 @@ public class SymbolTable{
 				}
 			}
 			oc.fieldBytes_ = fieldBytes;
-			System.out.println("class: " + oc.name_ + "--> :" + ocDms.size() + " and total bytes of " + oc.fieldBytes_);
+//			System.out.println("oc with name " + oc.name_ + " has " + oc.dataMembers_.size()  + " different fields");
+			//System.out.println("class: " + oc.name_ + "--> :" + ocDms.size() + " and total bytes of " + oc.fieldBytes_);
 
 			/* Now building the obfuscated methods */
 			List<Method> meths = cls.getMethods();
 			List<Method> ocMeths = oc.methods_;
-			
+//			System.out.println("st::buildCG. Class '" + cls.getName() + "' has " + meths.size() + " methods");
 			/* Find the maxMethodOffset to calculate the # of methods in a class */
 			int maxMethodOffset = 0;
 			for (Method m : meths) {
+//				System.out.println("st::buildCG2. " + m.getName() + " " + m.getReturnType() + " with " + m.getParameters().size() + " parameters");
 				if (m.getOffset() > maxMethodOffset) {
 					maxMethodOffset = m.getOffset();
 				}
@@ -337,7 +339,7 @@ public class SymbolTable{
 				pcls = this.getClass(pcls.getSuperName());
 			}
 			int no = maxMethodOffset/8 + 1;
-			System.out.println("class: " + oc.name_ + " has " + no + " method(s) \n");
+			//System.out.println("class: " + oc.name_ + " has " + no + " method(s) \n");
 
 			oc.methodBytes_ = no*8;
 			boolean found;
@@ -354,7 +356,7 @@ public class SymbolTable{
 					}
 				}
 				if (found == false) {
-					System.out.println("I will search in parent meths");
+					//System.out.println("I will search in parent meths");
 					pcls = this.getClass(oc.superName_);
 					while (pcls != null && found == false) {
 						meths = pcls.getMethods();
@@ -369,8 +371,10 @@ public class SymbolTable{
 						pcls = this.getClass(pcls.getSuperName());
 					}
 				}
-				System.out.println("Method " + ocMeths.get(i).getName() + " of class " + cls.getName() + " resides in class " + oc.methodInClass_.get(i) + "\n");
+				//System.out.println("Method " + ocMeths.get(i).getName() + " of class " + cls.getName() + " resides in class " + oc.methodInClass_.get(i) + "\n");
 			}	// for every method in the class
+//			System.out.println("oc with name " + oc.name_ + " has " + oc.methods_.size()  + " different methods");
+			ci.table_.put(oc.name_, oc);
 		}	// For every class in the st::Map
 	}
 

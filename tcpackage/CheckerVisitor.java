@@ -810,6 +810,7 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
 
 	@Override
 	public String visit(Identifier n, String argu) {
+//		System.out.println("Identifier is " + n.f0.toString() + " in class visiting " + visitingClass_);
 		return n.f0.toString();
 	}
 
@@ -823,6 +824,7 @@ public class CheckerVisitor extends GJDepthFirst<String, String> {
 			System.out.println("Nullclass in ThisExpression CheckError");
 			System.exit(2);
 		}
+//		System.out.println("It's a this expression in class " + visitingClass_);
 		return visitingClass_;
 	}
 
