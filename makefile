@@ -7,5 +7,15 @@ compile:
 	javac ./cgeneration/*.java
 	javac ./Main.java
 
+cg:	
+	javac ./cgeneration/*.java
+
+tc:
+	javac ./tcpackage/*.java
+
+main:
+	javac Main.java
+
+
 clean:
 	rm -f *.class *~ ./tcpackage/*.class

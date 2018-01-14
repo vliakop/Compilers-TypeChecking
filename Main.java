@@ -14,10 +14,10 @@ public class Main{
 /*
 		try {
 
-			PrintWriter out = new PrintWriter("poutsa" + ".ll");
-			String output = "Tis manas sou to mpougadokofino";
+			PrintWriter out = new PrintWriter("tessst" + ".ll");
+			String output = "someteext";
 			out.println(output);
-			out.println(output + " einai panemorfo giati to exo dei");
+			out.println(output + " someextratest");
 			System.out.println("ELEOS");
 			out.close();
 		} catch (FileNotFoundException nfne) {
@@ -50,8 +50,9 @@ public class Main{
 				/* Code Generation */
 				ClassesInfo ci = new ClassesInfo();
 				bv.symbolTable_.buildClassesInfo(ci);
-				CGeneratorVisitor cgv = new CGeneratorVisitor(bv.symbolTable_, ci, "arxidia");
+				CGeneratorVisitor cgv = new CGeneratorVisitor(bv.symbolTable_, ci, "test");
 				cgv.vtables();
+				cgv.definitions();
 				
 
 			} catch (IOException e) {

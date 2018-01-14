@@ -82,8 +82,46 @@ public class CGeneratorVisitor extends DepthFirstVisitor{
 
 	}
 
+	public void definitions() {
+		String dump = "";
+		for (Map.Entry<String, ObfuscatedClass> entry : classesInfo_.table_.entrySet()){
+				ObfuscatedClass ocls = entry.getValue();
+				List<Method> omethods = ocls.methods_;
+				List<String> owner = ocls.methodInClass_;
 
+				int len = omethods.size();
+				for (int i = 0; i < len; i++) {		// If the method is not overriden, the baseclass will write it
+					if (ocls.name_.equals(owner.get(i)) == false) {
+						continue;
+					}
+					Method m = omethods.get(i);
+					
+					String methodString = strManager_.define_;
 
+					String  returnType = ""; // Get the return type string and convert it to the corresponding llvm type
+					String methodName = "";
+					String methodArgs = "";
+					if (m.getName().equals("main") == true){
+						methodName = "main";
+						returnType = "i32";
+					} else {
+						methodName = ocls.name_ + "." + m.getName();
+						methodArgs = "i8* %this";
+						returnType = this.typeToPointer(m.getReturnType());
+					}
+					List<Variable> params = m.getParameters();
+					for (Variable v : params) {
+						methodArgs = methodArgs + ", " + this.typeToPointer(v.getType()) + " " + "%." + v.getName(); 
+					}
+					methodString = methodString.replace("#r", returnType).replace("#fname", methodName).replace("#args", methodArgs).replace("#body", "#body" + methodName);
+					dump = dump + methodString;
+				}	// for every method
+
+			}
+			System.out.println(dump);
+	}
+
+	
 
 
 
