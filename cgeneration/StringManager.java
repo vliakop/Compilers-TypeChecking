@@ -7,8 +7,8 @@ public class StringManager{
 	
 	public String define_ = "define #r @#fname(#args){\n#body\n}\n\n";
 	public String ret_ = "\tret #type %#reg\n";
-	public String alloca_ = " alloca #type\n";
-	public String store_ = "\tstore #type #source, #type* %#targetptr\n";
+	public String alloca_ = "\t#optional alloca #type\n";
+	public String store_ = "\tstore #type #source, #type* #target\n";
 	public String load_ = "\tload #type, #type* %#sourceptr\n";
 	public String call_ = "\tcall #ret @#fname(#args)\n";
 	public String add_ = "\tadd #type #value1, #value2\n";

@@ -7,7 +7,7 @@ import visitor.*;
 import syntaxtree.*;
 import tcpackage.*;
 
-public class CGeneratorVisitor extends DepthFirstVisitor{
+public class CGeneratorVisitor extends GJDepthFirst<String, String>{
 	
 	private String visitingClass_;
 	private String visitingMethod_;
@@ -101,7 +101,7 @@ public class CGeneratorVisitor extends DepthFirstVisitor{
 					String  returnType = ""; // Get the return type string and convert it to the corresponding llvm type
 					String methodName = "";
 					String methodArgs = "";
-					if (m.getName().equals("main") == true){
+					if (m.getName().equals("main") == true){	// Calculate the name and the return type of the method - Exclude the main function
 						methodName = "main";
 						returnType = "i32";
 					} else {
@@ -109,15 +109,20 @@ public class CGeneratorVisitor extends DepthFirstVisitor{
 						methodArgs = "i8* %this";
 						returnType = this.typeToPointer(m.getReturnType());
 					}
-					List<Variable> params = m.getParameters();
+					List<Variable> params = m.getParameters();	
+					String paramsToLLVM = "";
 					for (Variable v : params) {
-						methodArgs = methodArgs + ", " + this.typeToPointer(v.getType()) + " " + "%." + v.getName(); 
+						String varType = this.typeToPointer(v.getType());
+						methodArgs = methodArgs + ", " + varType + " " + "%." + v.getName(); // Create the parameter list like this: <type> %.variable_name
+						paramsToLLVM = paramsToLLVM + strManager_.alloca_.replace("#optional", "%" + v.getName() + " = ").replace("#type", varType);
+						paramsToLLVM = paramsToLLVM + strManager_.store_.replace("#type", varType).replace("#source", "%." + v.getName()).replace("#target", "%" + v.getName());
+
 					}
-					methodString = methodString.replace("#r", returnType).replace("#fname", methodName).replace("#args", methodArgs).replace("#body", "#body" + methodName);
+					methodString = methodString.replace("#r", returnType).replace("#fname", methodName).replace("#args", methodArgs).replace("#body", paramsToLLVM + "\n\t#body" + methodName);
 					dump = dump + methodString;
 				}	// for every method
 
-			}
+			} // for every class
 			System.out.println(dump);
 	}
 
